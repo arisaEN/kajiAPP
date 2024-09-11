@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Details Form</title>
+</head>
+<body>
+    <form action="/submit_details" method="post">
+        <label for="user_id">Select Name:</label>
+        <select name="user_id" id="user_id">
+            <!-- Pythonコードでユーザーリストをここに挿入 -->
+            {% for user in users %}
+                <option value="{{ user.id }}">{{ user.name }}</option>
+            {% endfor %}
+        </select>
+        <label for="description">Description:</label>
+        <input type="text" id="description" name="description">
+        <label for="amount">Amount:</label>
+        <input type="text" id="amount" name="amount">
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

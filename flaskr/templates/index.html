@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{{url_for('static',filename='style.css') }}">
+        <title>おぎたろうアプリ</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.jsの追加 -->
+        <script>
+            function validateForm() {
+                // フォームのすべての入力フィールドとセレクトフィールドを取得
+                const inputs = document.querySelectorAll('input:not([type="submit"])');
+                const selects = document.querySelectorAll('select');
+                
+                // 入力フィールドがすべて入力されているか確認
+                for (let input of inputs) {
+                    if (input.value === '') {
+                        alert('すべてのフィールドを入力してください');
+                        return false; // フォームの送信をキャンセル
+                    }
+                }
+    
+                // セレクトフィールドがすべて選択されているか確認
+                for (let select of selects) {
+                    if (select.value === '') {
+                        alert('すべてのフィールドを入力してください');
+                        return false; // フォームの送信をキャンセル
+                    }
+                }
+    
+                return true; // すべてのフィールドが入力されている場合、フォームを送信
+            }
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    </head>
+    <body>
+        <h1></h1>
+        <h2>家事実績入力</h2>
+
+        <form method="post" action="{{ url_for('register') }}">
+            {% if works != [] %}
+                <table border="1">
+                    <tr>
+                        
+                        <th>id</th>
+                        <th>日付</th>
+                        <th>名前</th>
+                        <th>家事名</th>
+                        <th>何割?</th>
+                    </tr>
+                    {% for work in works %}
+                        <tr>
+                            <!--<td><input type="radio" name="selected_work" value="{{ work.id }}_{{ work.day }}_{{ work.name }}_{{ work.work }}_{{ work.percent }}"></td>-->
+                            <td>{{ work.id }}</td>
+                            <td>{{ work.day }}</td>
+                            <td>{{ work.name }}</td>
+                            <td>{{ work.work }}</td>
+                            <td>{{ work.percent }}%</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>not record</p>
+            {% endif %}
+        </form>
+        <br>
+
+        <h1>実績入力フォーム</h1>
+        <form onsubmit="return validateForm()" method="post" action="{{url_for('register') }}">
+            <input type="hidden" id="workId" name="workId">
+            <input type="hidden" id="workName" name="workName">
+            <table border ="1">
+                <tr>    
+                    <th>日付</th>
+                    <th>名前</th>
+                    <th>家事名</th>
+                    <th>何割?</th>
+                </tr>
+                <tr>
+                    <td><input type="date" id="dateInput" name="day" class="large-text"></td>
+                    <td>
+                        <select name="name" class="large-text">
+                            {% for name in nameList %}
+                            <option value="{{ name }}" {% if name == request.cookies.get('name') %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <select id="workSelect" name="work" class="large-text" onchange="updateHiddenFields()">
+                            {% for work in workList %}
+                            <option value="{{ work[0] }}">{{ work[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <div style="display: flex; justify-content: space-between;">
+                            <div>
+                                <input type="radio" id="percent50" name="percent" value="50" class="large-text">
+                                <label for="percent50">50%</label>
+                            </div>
+                            <div>
+                                <input type="radio" id="percent100" name="percent" value="100" class="large-text" checked>
+                                <label for="percent100">100%</label>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <br>
+            <input type="submit" value="登録" class="large-text" onclick="confirmSubmission()">
+
+
+
+
+        </form>
+        <br>
+
+        <br>
+
+    <h2>人ごとの合計ポイント</h2>
+    <h3 class="month-display">{{ datetime.datetime.now().strftime("%B") }}</h3>
+        {% if analysisResults %}
+        <table border="1">
+            <tr>
+                <th>名前</th>
+                <th>合計ポイント</th>
+                <th>割合</th>
+            </tr>
+            {% for result in analysisResults %}
+            <tr>
+                <td>{{ result.name }}</td>
+                <td>{{ result.total_points }}</td>
+                <td>{{ result.percentage }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>空です～</p>
+        {% endif %}
+
+    
+    <br>
+    <div style="max-width: 100%;height: auto;">
+        <canvas id="lineChart"></canvas>
+    </div>
+    
+
+    
+
+    <h2>家事分類区分の円グラフ</h2>
+    <div id="chartsContainer" style="display: flex; flex-wrap: wrap; justify-content: space-around;"> <!-- グラフを表示するコンテナ -->
+    
+    <script>
+        const categoryData = {{ category_data | tojson }}; // Pythonからデータを取得
+
+        // 名前ごとにカテゴリの合計ポイントを集計
+        const groupedData = categoryData.reduce((acc, data) => {
+            acc[data.name] = acc[data.name] || {};
+            acc[data.name][data.category] = (acc[data.name][data.category] || 0) + data.total_points;
+            return acc;
+        }, {});
+
+        // 各名前ごとに円グラフを作成
+        for (const name in groupedData) {
+            const ctx = document.createElement('canvas');
+            ctx.width = 50; // 幅を小さく調整
+            ctx.height = 50; // 高さを小さく調整
+            ctx.style.margin = '10px'; // グラフ間の余白を追加
+            document.getElementById('chartsContainer').appendChild(ctx);
+
+            const labels = Object.keys(groupedData[name]);
+            const dataPoints = labels.map(category => groupedData[name][category]);
+
+            new Chart(ctx, {
+                type: 'pie', // 円グラフ
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${name}の家事分類区分のポイント`,
+                        data: dataPoints,
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'], // 色の設定
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            display: true // 凡例を常に表示
+                        },
+                        title: {
+                            display: true,
+                            text: `${name}の家事分類区分の円グラフ`
+                        }
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + '%';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+     <script>
+         const dates = {{ dates|tojson }};
+         const data = {{ data|tojson }};
+     
+         const datasets = Object.keys(data).map((name, index) => {
+             let borderColor;
+             if (index === 0) {
+                 borderColor = '#007bff'; // 青色
+             } else if (index === 1) {
+                 borderColor = '#28a745'; // 緑色
+             } else {
+                 borderColor = `#${Math.floor(Math.random()*16777215).toString(16)}`;
+             }
+             return {
+                 label: name,
+                 data: data[name],
+                 fill: false,
+                 borderColor: borderColor,
+                 borderWidth: 2,
+                 pointBackgroundColor: '#fff',
+                 pointRadius: 3,
+                 pointHoverRadius: 6,
+                 tension: 0.4
+             };
+         });
+     
+         const ctx = document.getElementById('lineChart').getContext('2d');
+         new Chart(ctx, {
+             type: 'line',
+             data: {
+                 labels: dates,
+                 datasets: datasets
+             },
+             options: {
+                 responsive: true,
+                 plugins: {
+                     legend: {
+                         labels: {
+                             color: '#ccc',
+                             font: {
+                                 size: 14
+                             }
+                         }
+                     },
+                 },
+                 scales: {
+                     x: {
+                         display: true,
+                         title: {
+                             display: true,
+                             text: 'Date',
+                             color: '#aaa',
+                             font: {
+                                 size: 16
+                             }
+                         },
+                         grid: {
+                             color: '#333',
+                             drawBorder: false,
+                         },
+                         ticks: {
+                             color: '#ccc'
+                         }
+                     },
+                     y: {
+                         display: true,
+                         title: {
+                             display: true,
+                             text: 'Total Points',
+                             color: '#aaa',
+                             font: {
+                                 size: 16
+                             }
+                         },
+                         grid: {
+                             color: '#333',
+                             drawBorder: false,
+                         },
+                         ticks: {
+                             color: '#ccc'
+                         }
+                     }
+                 },
+                 layout: {
+                     padding: {
+                         left: 10,
+                         right: 10,
+                         top: 20,
+                         bottom: 10
+                     }
+                 }
+             }
+         });
+     </script>
+
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <a href="{{ url_for('option')}}">設定</a>
+    <a href="{{ url_for('scr')}}">スクレイピング</a>
+
+
+    <script>
+        function confirmSubmission() {
+        const workSelect = document.getElementById('workSelect');
+        const selectedOption = workSelect.options[workSelect.selectedIndex];
+        document.getElementById('workId').value = selectedOption.value;
+        document.getElementById('workName').value = selectedOption.text;
+
+        if (confirm("登録しますか？")) {
+        document.forms[1].submit();
+        }
+    }
+    </script>
+
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var dateInput = document.getElementById('dateInput');
+            var today = new Date();
+            var day = ("0" + today.getDate()).slice(-2);
+            var month = ("0" + (today.getMonth() + 1)).slice(-2);
+            var todayString = today.getFullYear() + '-' + month + '-' + day;
+            dateInput.value = todayString;
+        });
+    </script>
+
+
+</html>

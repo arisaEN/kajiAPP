@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="{{url_for('static',filename='style.css') }}">
+        <title>おぎたろうアプリ</title>
+        
+    </head>
+    <body>
+        
+        <h1>設定</h1>
+        
+        <!-- 家事　-->
+        <h2>家事名リスト管理</h2>
+        <form method="post" action="{{ url_for('register2') }}">
+            {% if workList != [] %}
+                <table border="1">
+                    <tr>
+                        
+                        <th>id</th>
+                        <th>家事名</th>
+                        <th>ポイント</th>
+                        <th>区分番号</th>
+                    </tr>
+                    {% for w in workList %}
+                        <tr>
+                            <td>{{ w.id }}</td>
+                            <td>{{ w.workName }}</td>
+                            <td>{{ w.workNamePoint }}</td>
+                            <td>{{ w.家事分類区分番号 }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </form>
+        <p>※1-料理,2-掃除,3-皿洗い,4-洗濯,5-ごみ捨て</p>
+
+        <h3>家事リスト挿入</h3>
+        <form method="post" action="{{url_for('register2') }}">
+            <table border ="1">
+                <tr>    
+                    <th>家事名</th>
+                    <th>ポイント</th>
+                    <th>家事分類区分番号</th>
+                </tr>
+                <tr>
+                    <td><input type="text" name = "workName"></td>
+                    <td><input type="text" name = "workNamePoint"></td>
+                    <td><input type="text" name = "家事分類区分番号"></td>
+                </tr>
+            </table>
+            <br>
+            <input type="submit" value = "家事名登録">
+        </form>
+        <br>
+        <br>
+
+
+
+
+        <!-- 名前　-->
+        <h2>名前リスト管理</h2>
+        <form method="post" action="{{ url_for('register3') }}">
+            {% if nameList != [] %}
+                <table border="1">
+                    <tr>
+                        
+                        <th>id</th>
+                        <th>名前</th>
+
+                    </tr>
+                    {% for n in nameList %}
+                        <tr>
+                            <td>{{ n.id }}</td>
+                            <td>{{ n.name }}</td>
+                         
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </form>
+
+
+
+        <h3>名前リスト挿入</h3>
+        <form method="post" action="{{url_for('register3') }}">
+            <table border ="1">
+                <tr>    
+                    <th>名前</th>
+                </tr>
+                <tr>
+                    <td><input type="text" name = "name"></td>
+                </tr>
+            </table>
+            <br>
+            <input type="submit" value = "名前登録">
+        </form>
+
+        <br>
+        <br>
+        <br>
+        <br>
+        
+        <a href="{{ url_for('index')}}">家事実績入力一覧へ戻る</a>
+
+        <br>
+        
+        <br>
+
+    </body>
+</html>
