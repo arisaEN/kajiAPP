@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="{{url_for('static',filename='style_eat.css') }}">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>食費記録</title>
+        <script>
+            function showInputForm(year, month) {
+                const form = document.getElementById(`input-form-${year}-${month}`);
+                form.style.display = 'block';
+            }
+
+            function toggleDetails(year, month) {
+                const detailsDiv = document.getElementById(`details-${year}-${month}`);
+                if (detailsDiv.style.display === 'none') {
+                    detailsDiv.style.display = 'block'; // 表示
+                } else {
+                    detailsDiv.style.display = 'none'; // 非表示
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <h1>食費記録一覧</h1>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>年</th>
+                    <th>月</th>
+                    <th>金額</th>
+                    <!--<th>説明</th>-->
+                    <!--<th>作成日時</th>-->
+                    <th>操作</th> 
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record[0] }}</td>
+                    <td>{{ record[1] }}</td>
+                    <td>{{ record[2] }}</td>
+                    <!--<td>{{ record[3] }}</td>-->
+                    <!--<td>{{ record[4] }}</td>-->
+                    <td>
+                        <button onclick="showInputForm({{ record[0] }}, {{ record[1] }})">入力</button>
+                        <div id="input-form-{{ record[0] }}-{{ record[1] }}" style="display:none;">
+                            <form action="/save_detail" method="POST">
+                                <input type="hidden" name="year" value="{{ record[0] }}">
+                                <input type="hidden" name="month" value="{{ record[1] }}">
+                                <label for="amount">金額:</label>
+                                <input type="number" name="amount" required>
+                                <button type="submit">登録</button>
+                            </form>
+                        </div>
+                        <button onclick="toggleDetails({{ record[0] }}, {{ record[1] }})">編集</button> <!-- 編集ボタン追加 -->
+                        <div id="details-{{ record[0] }}-{{ record[1] }}" style="display:none;">
+                            <!-- 明細一覧を表示する場所 -->
+                            {% for detail in details[(record[0], record[1])] %}
+                                <form action="/update_detail" method="POST">
+                                    <input type="hidden" name="id" value="{{ detail[0] }}">
+                                    <label for="amount-{{ detail[0] }}">金額:</label>
+                                    <input type="number" name="amount" id="amount-{{ detail[0] }}" value="{{ detail[1] }}" required>
+                                    <button type="submit">更新</button>
+                                </form>
+                                <p>登録日時: {{ detail[2] }}</p>
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">データがありません</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        <br>
+        <br>
+        <a href="{{ url_for('index')}}">家事実績入力一覧へ戻る</a>
+    </body>
+</html>

@@ -26,3 +26,16 @@ def create_家事分類区分_table():
     con.execute("CREATE TABLE IF NOT EXISTS 家事分類区分(家事分類区分番号ID INTEGER PRIMARY KEY AUTOINCREMENT, 区分番号 INTEGER, 区分名 varchar(40))")
 
     con.close()
+
+#食費入力用
+def create_eat_table():
+    con=sqlite3.connect('database.db')
+    con.execute("CREATE TABLE IF NOT EXISTS eat (id INTEGER PRIMARY KEY AUTOINCREMENT,year TEXT,month TEXT,amount INTEGER,description TEXT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);")  # 修正箇所
+
+    con.close()
+#食費明細
+def create_eat_detail_table():
+    con = sqlite3.connect('database.db')
+    con.execute("CREATE TABLE IF NOT EXISTS eat_detail (id INTEGER PRIMARY KEY AUTOINCREMENT,year TEXT,month TEXT,amount INTEGER,input_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP);")
+    
+    con.close()  

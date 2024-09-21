@@ -1,0 +1,116 @@
+/* ベーススタイルのリセット */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    padding: 20px;
+    background-color: #1c1c1c; /* 暗い背景色 */
+    color: #e0e0e0; /* 白っぽい文字色 */
+    line-height: 1.6;
+}
+
+/* タイトルのスタイル */
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #ffffff; /* タイトルも白 */
+}
+
+/* テーブル全体のスタイル */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: #333; /* 暗めのテーブル背景 */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3); /* 影を少し強めに */
+}
+
+th, td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #444; /* 暗いボーダー */
+}
+
+/* テーブルヘッダーのスタイル */
+thead th {
+    background-color: #555; /* ヘッダーもダークグレー系 */
+    color: #f1f1f1; /* 白っぽい文字色 */
+    font-weight: bold;
+}
+
+/* 行の色を交互に設定 */
+tbody tr:nth-child(even) {
+    background-color: #2a2a2a; /* 行背景も暗めに */
+}
+
+/* ボタンのスタイル */
+button {
+    padding: 10px 18px; /* 少し大きめに */
+    margin-top: 5px;
+    color: #ffffff; /* 白い文字色 */
+    background-color: #444; /* 暗い背景色のボタン */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #555; /* ボタンのホバー時も暗め */
+}
+
+/* 入力フォームのスタイル */
+form {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #2a2a2a; /* フォーム背景もダーク */
+    border-radius: 5px;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+input[type="number"] {
+    padding: 12px; /* 大きめに調整 */
+    margin-right: 10px;
+    width: 100px; /* テキストボックスの幅を広げる */
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: #444; /* テキストボックスも暗め */
+    color: #ffffff; /* 白い文字色 */
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: #888; /* フォーカス時の強調色 */
+}
+
+/* スマホ向けスタイル */
+@media (max-width: 768px) {
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 10px;
+    }
+
+    button {
+        padding: 8px 14px; /* ボタンも少し小さめ */
+        font-size: 14px;
+    }
+
+    form {
+        padding: 8px;
+    }
+
+    input[type="number"] {
+        width: 90%; /* スマホでは幅を100%に近く */
+    }
+}
+
+/* テキストボックスをタップしてもズームインしない */
+input, button, select, textarea {
+    font-size: 16px; /* 16px以上でズームを防止 */
+}

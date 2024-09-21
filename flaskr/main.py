@@ -1,11 +1,12 @@
 from flaskr import app
 from flask import render_template,request,redirect,url_for
 import sqlite3
-import datetime
+from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
 import base64
+
 DATABASE ='database.db'
 
 #ページにアクセスした時
@@ -72,14 +73,6 @@ def index():
         category_data.append({'name': row[0], 'category': row[1], 'total_points': row[2]})
 
 
-
-    
-   
-
-
-    
-
-    
     con.close()
     works = []
     analysisResults = []
@@ -105,7 +98,8 @@ def index():
         workList=workList,
         nameList=nameList,
         analysisResults=analysisResults,
-        datetime=datetime,
+        # datetimeをdatetimeモジュールから直接渡す
+        current_datetime=datetime.now(),  # 変更点
         dates=dates, data=data,
         category_data=category_data
     )
@@ -146,20 +140,186 @@ def option():
 
 @app.route('/scr')
 def scr():
-
-
-
-    
-
+  
     return render_template(
         'scr.html',
 
         
     )
+###################################################################
+@app.route('/eat')
+def eat():
+    # 今年の今月のレコードが存在しなければ挿入
 
+    insert_eat_record_if_not_exists()
+    if has_eat_details():  # eat_detail が存在するかチェック
+        update_eat_amount()  # 存在する場合のみ update 関数を呼び出す
+    
+    records = get_eat_records()
+
+    # 各レコードの明細を取得
+    details = { (record[0], record[1]): get_eat_detail_records(record[0], record[1]) for record in records }
+
+    return render_template(
+        'eat.html',
+        records=records,
+        details=details  # 明細を渡す
+    )
+
+
+def has_eat_details():
+    # SQLite3 を使って eat_detail テーブルのレコード数を確認する
+    con = sqlite3.connect('database.db')  # データベースに接続
+    cur = con.cursor()  # カーソルを作成
+
+    # SQLクエリでレコード数を取得
+    cur.execute("SELECT COUNT(*) FROM eat_detail")
+    count = cur.fetchone()[0]  # 結果からレコード数を取得
+
+    con.close()  # データベース接続を閉じる
+
+    return count > 0  # レコードが1件以上あればTrue
+
+
+
+
+# テーブル作成・データ挿入関数
+def insert_eat_record_if_not_exists():
+    con = sqlite3.connect('database.db')
+    cur = con.cursor()
+
+    # テーブルが存在しない場合の作成
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS eat (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            year INTEGER,
+            month INTEGER,
+            amount REAL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+
+    # 現在の年と月を取得し、月は"00"という書式にする
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
+
+    # 月を"00"という書式にする
+    formatted_month = str(current_month).zfill(2)
+
+    # 今年の今月のレコードが存在するか確認
+    cur.execute("""
+        SELECT 1 FROM eat WHERE year = ? AND month = ?
+    """, (current_year, formatted_month))
+    
+    record_exists = cur.fetchone()
+
+    # レコードが存在しなければ新規作成
+    if not record_exists:
+        cur.execute("""
+            INSERT INTO eat (year, month, amount, description)
+            VALUES (?, ?, ?, ?)
+        """, (current_year, formatted_month, 0.0, '初期レコード'))
+
+
+
+    con.commit()
+    con.close()
+
+# テーブルのデータを取得してHTMLに表示する関数
+def get_eat_records():
+    con = sqlite3.connect('database.db')
+    cur = con.cursor()
+
+    # `created_at` の降順で12件取得
+    cur.execute("""
+        SELECT year, month, amount, description, created_at
+        FROM eat
+        ORDER BY created_at DESC
+        LIMIT 12
+    """)
+    records = cur.fetchall()
+    con.close()
+
+    return records
+
+
+def update_eat_amount():
+    conn = sqlite3.connect('database.db')  # データベース接続
+    cursor = conn.cursor()
+
+    # SQL実行
+    cursor.execute('''
+        UPDATE eat
+        SET amount = (
+            SELECT SUM(ed.amount)
+            FROM eat_detail ed
+            WHERE ed.year = eat.year AND ed.month = eat.month
+        )
+        WHERE EXISTS (
+            SELECT 1
+            FROM eat_detail ed
+            WHERE ed.year = eat.year AND ed.month = eat.month
+        );
+    ''')
+
+    conn.commit()  # 変更をコミット
+    conn.close()   # 接続を閉じる
+
+# 新しい関数を追加
+def get_eat_detail_records(year, month):
+    con = sqlite3.connect(DATABASE)
+    cur = con.cursor()
+    cur.execute("""
+        SELECT id, amount, input_time  
+        FROM eat_detail
+        WHERE year = ? AND month = ?
+    """, (year, month))
+    records = cur.fetchall()
+    con.close()
+    return records
+
+
+
+@app.route('/update_detail', methods=['POST'])
+def update_detail():
+    detail_id = request.form['id']
+    amount = request.form['amount']
+
+    con = sqlite3.connect(DATABASE)
+    con.execute("""
+        UPDATE eat_detail
+        SET amount = ?
+        WHERE id = ?
+    """, (amount, detail_id))
+    
+    con.commit()
+    con.close()
+    
+    return redirect(url_for('eat'))  # 食費記録ページにリダイレクト
 
 
     
+##################################################################
+#食費明細
+@app.route('/save_detail', methods=['POST'])
+def save_detail():
+    year = request.form['year']
+    month = request.form['month']
+    amount = request.form['amount']
+
+    con = sqlite3.connect(DATABASE)
+    con.execute("""
+        INSERT INTO eat_detail (year, month, amount)
+        VALUES (?, ?, ?)
+    """, (year, month, amount))
+    
+    con.commit()
+    con.close()
+    
+    return redirect(url_for('eat'))  # 食費記録ページにリダイレクト
+
 
 
 #家事実績テーブル
@@ -271,5 +431,9 @@ def get_names():
 if __name__ == '__main__' :
     app.run(debug=False ,host='0.0.0.0',port=8888)
     #app.run(debug=False ,host='100.64.16.21',port=80)
+
+
+
+
 
 

@@ -71,7 +71,7 @@
         <br>
 
         <h1>実績入力フォーム</h1>
-        <form onsubmit="return validateForm()" method="post" action="{{url_for('register') }}">
+        <form onsubmit="return confirmSubmission()" method="post" action="{{ url_for('register') }}">
             <input type="hidden" id="workId" name="workId">
             <input type="hidden" id="workName" name="workName">
             <table border ="1">
@@ -112,7 +112,7 @@
                 </tr>
             </table>
             <br>
-            <input type="submit" value="登録" class="large-text" onclick="confirmSubmission()">
+            <input type="submit" value="登録" class="large-text">
 
 
 
@@ -123,25 +123,25 @@
         <br>
 
     <h2>人ごとの合計ポイント</h2>
-    <h3 class="month-display">{{ datetime.datetime.now().strftime("%B") }}</h3>
-        {% if analysisResults %}
-        <table border="1">
-            <tr>
-                <th>名前</th>
-                <th>合計ポイント</th>
-                <th>割合</th>
-            </tr>
-            {% for result in analysisResults %}
-            <tr>
-                <td>{{ result.name }}</td>
-                <td>{{ result.total_points }}</td>
-                <td>{{ result.percentage }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-        {% else %}
-        <p>空です～</p>
-        {% endif %}
+    <h3 class="month-display">{{ current_datetime.strftime("%B") }}</h3> <!-- 変更点 -->
+    {% if analysisResults %}
+    <table border="1">
+        <tr>
+            <th>名前</th>
+            <th>合計ポイント</th>
+            <th>割合</th>
+        </tr>
+        {% for result in analysisResults %}
+        <tr>
+            <td>{{ result.name }}</td>
+            <td>{{ result.total_points }}</td>
+            <td>{{ result.percentage }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>空です～</p>
+    {% endif %}
 
     
     <br>
@@ -320,20 +320,22 @@
     <br>
     <br>
     <a href="{{ url_for('option')}}">設定</a>
+    <a href="{{ url_for('eat')}}">食費入力</a>
     <a href="{{ url_for('scr')}}">スクレイピング</a>
 
 
     <script>
         function confirmSubmission() {
-        const workSelect = document.getElementById('workSelect');
-        const selectedOption = workSelect.options[workSelect.selectedIndex];
-        document.getElementById('workId').value = selectedOption.value;
-        document.getElementById('workName').value = selectedOption.text;
+            const workSelect = document.getElementById('workSelect');
+            const selectedOption = workSelect.options[workSelect.selectedIndex];
+            document.getElementById('workId').value = selectedOption.value;
+            document.getElementById('workName').value = selectedOption.text;
 
-        if (confirm("登録しますか？")) {
-        document.forms[1].submit();
+            if (!confirm("登録しますか？")) {
+                return false;  // "いいえ"を選択した場合、フォーム送信を中止
+            }
+            document.forms[1].submit();  // "はい"を選択した場合のみフォームを送信
         }
-    }
     </script>
 
 
